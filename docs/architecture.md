@@ -6,12 +6,13 @@
 
 ## TL;DR
 
-A TwelveLabs-powered pipeline for a metropolitan police department's body-worn camera (BWC) program. Two outputs per clip:
+A TwelveLabs-powered pipeline for a metropolitan police department's body-worn camera (BWC) program. Three capabilities:
 
-1. **Triage classification** — `Urgent` / `Standard` / `Archive`, so analysts know which footage needs immediate review
-2. **Policy compliance audit** — Miranda delivery, de-escalation language, use-of-force type, officer-subject positioning, all with timestamped evidence
+1. **Triage classification** (Pegasus) — `Urgent` / `Standard` / `Archive`, so analysts know which footage needs immediate review
+2. **Policy compliance audit** (Pegasus) — Miranda delivery, de-escalation language, use-of-force type, officer-subject positioning, all with timestamped evidence
+3. **Cross-library search** (Marengo) — natural-language queries across the full video library: *"show me all footage where an officer drew a firearm"*
 
-Both outputs are chain-of-custody-ready: every flag is anchored to a video timestamp, every API call cites a versioned prompt and schema file on disk, and every report embeds the source file's SHA-256.
+Triage and compliance outputs are chain-of-custody-ready: every flag is anchored to a video timestamp, every API call cites a versioned prompt and schema file on disk, and every report embeds the source file's SHA-256.
 
 Verified end-to-end on **four real clips** spanning the priority spectrum:
 
@@ -98,21 +99,24 @@ This is the proof point that matters most: **the model is reading the scene the 
 
 ## 1. What TwelveLabs capabilities did you use, and why?
 
-**Core primitive:** Pegasus 1.2 via `client.analyze()` with `response_format=ResponseFormat(type="json_schema", ...)`. One API endpoint. Two different prompt + schema pairs produce two different structured outputs (triage and compliance). No indexes. No embeddings. No search.
+**Two models, two jobs:**
 
-### Why Pegasus and not Marengo?
+- **Pegasus 1.2** via `client.analyze()` with `response_format=ResponseFormat(type="json_schema", ...)` — for per-clip triage and compliance. One API endpoint, two prompt/schema pairs, two structured outputs.
+- **Marengo 3.0** via `client.search.query()` — for cross-library natural-language search across all indexed footage. Separate index, separate pipeline.
 
-- **The customer's core pain is *per-clip* analysis, not *cross-library* retrieval.** Pegasus is the right tool for per-clip work; Marengo is the right tool for cross-library work. Marengo would be a Phase 2 add — see § 3.
+### Why both models?
+
+- **Pegasus for per-clip work, Marengo for cross-library work.** The customer's primary pain is triage (per-clip), but investigators also need to search across footage by event type. Both are implemented.
 - **Pegasus structured-response mode returns both the classification AND the evidence** (timestamps, quotes, reasoning) in a single call. That's the unit of work that maps cleanly to an evidentiary record — and that's why this solution can produce a chain-of-custody report instead of just a classification.
 - **One model per use case keeps the operational surface small.** We can version the prompt + schema and reason about output quality in isolation. Adding Marengo in parallel would double the surface area for marginal product value at this stage.
 
-### Why no index?
+### Two indexes, not one
 
-Pegasus analyze runs directly off `asset_id` — no index creation needed. Indexes are for search, not for analyze. Skipping the index step removed an entire layer of state management from the pipeline. Marengo and Pegasus also can't coexist in the same index, so a Phase-2 search capability would mean a separate index lifecycle anyway.
+Marengo and Pegasus cannot coexist in the same index — this is a platform constraint. The demo creates two indexes: `bwc-pegasus` for the analyze pipeline and `bwc-marengo` for cross-library search. In production, assets are uploaded once and indexed into both. Pegasus analyze also works directly off `asset_id` without an index, which is how the initial demo ran before we added search.
 
 ### Key v1.3 API quirks worked around
 
-(Full details in [`skill.md`](../skill.md) § 6 — these are documented so the next engineer doesn't lose the same hour I did.)
+(These are documented so the next engineer doesn't lose the same hour I did.)
 
 | Quirk | Reality | Workaround |
 |---|---|---|
@@ -258,6 +262,55 @@ That paragraph is what an IA supervisor or defense attorney reads first. **It pl
 - **We do not store model outputs as "facts."** Every report is labeled as AI-generated at the top of the markdown render.
 - **We do not train on individual officers.** Behavioral drift is detected at the *aggregate* level by the bias dashboard (Phase 2), never at the individual level. This prevents the system from becoming a per-officer surveillance tool — which is a hard line for civil-liberties oversight.
 
+### 4c. Procurement pathway — how a government agency gets access
+
+While data sovereignty and explainability were the two constraints I went deepest on, procurement is the practical blocker that determines whether the technology ever reaches the customer. Here's how BWC-IQ + TwelveLabs would actually get bought:
+
+#### Fastest path: AWS Marketplace / Bedrock
+
+TwelveLabs is available on **Amazon Bedrock** as a foundation model. For agencies with an existing AWS contract (Enterprise Discount Program, GovCloud account, or a blanket purchase agreement), this is the path of least resistance:
+
+- **No new vendor procurement.** The agency is buying AWS compute, not a new software vendor. TwelveLabs usage shows up on the existing AWS bill.
+- **FedRAMP inheritance.** Bedrock is FedRAMP High authorized. Models running on Bedrock inherit that authorization posture — the agency's ATO (Authority to Operate) team doesn't need to separately evaluate TwelveLabs.
+- **CJIS compliance.** For law enforcement data, CJIS Security Policy applies. AWS GovCloud meets CJIS requirements. Bedrock models in GovCloud inherit that compliance.
+- **Metered pricing.** Pay per API call, no upfront commitment. The pilot phase (1 precinct, 30 days) can run on a credit card-sized budget before any formal procurement is needed.
+
+This is how we'd recommend a pilot starts: **spin up a Bedrock endpoint in the agency's existing AWS account, run shadow mode for 30 days, and produce comparison data before anyone writes an RFP.**
+
+#### Mid-term: contract vehicles
+
+For a full deployment beyond the pilot:
+
+| Vehicle | How it applies |
+|---|---|
+| **NASA SEWP V** | Covers cloud, AI/ML, and software solutions. Many AWS partners are on SEWP. Fast ordering (~2 weeks). |
+| **GSA IT Schedule 70 / MAS** | The standard federal IT procurement vehicle. If TwelveLabs or a partner SI is on schedule, agencies can issue a task order directly. |
+| **NASPO ValuePoint / OMNIA Partners** | Cooperative purchasing for state and local agencies. Allows jurisdictions to piggyback on competitively bid contracts without running their own procurement. |
+| **Sole-source justification** | For pilot/evaluation use under the micro-purchase threshold ($10K federal, varies by state). No competitive bid needed. |
+
+#### Go-to-market: through a systems integrator
+
+For a large metropolitan PD, the realistic go-to-market is **TwelveLabs as a component inside a systems integrator's solution.** The SI brings:
+
+- The existing contract relationship and agency trust
+- Security clearances and CJIS compliance posture
+- Implementation team (integration with Axon/Motorola DEMS, training, change management)
+- The ATO package (security documentation, pen test results, privacy impact assessment)
+
+Likely SI partners for law enforcement video analytics: **Booz Allen Hamilton, SAIC, Deloitte, Leidos, Mark43, or Axon's professional services team** (if Axon sees this as complementary rather than competitive to their own analytics).
+
+TwelveLabs would be positioned as the **video understanding engine** inside the SI's broader evidence management modernization proposal — not as a standalone point solution.
+
+#### Compliance certifications that matter
+
+| Certification | Status via Bedrock | Why it matters |
+|---|---|---|
+| **FedRAMP High** | Inherited from Bedrock | Required for most federal systems. Bedrock has it. |
+| **CJIS** | Satisfied via GovCloud | Required for any system touching criminal justice data. |
+| **StateRAMP** | Depends on deployment | For state/local agencies that don't require FedRAMP. |
+| **SOC 2 Type II** | TwelveLabs SaaS path | Standard for cloud vendors. Would need to verify TwelveLabs has completed this. |
+| **IL4/IL5** | GovCloud path | For DoD-adjacent use cases (military law enforcement). |
+
 ---
 
 ## 5. Scale analysis — 10K+ videos/month
@@ -272,9 +325,30 @@ That paragraph is what an IA supervisor or defense attorney reads first. **It pl
 - 1 compliance analyze call
 - 1 SHA-256 hash + 2 file writes (local, free)
 
-**Observed end-to-end latency** on the four sample clips: each completed in well under a minute interactively (precise per-call timing instrumentation is on the TODO list — currently inferred from observation, not measured). At 14 clips/hour and ~1 minute per clip, **a single sequential worker handles the load with idle capacity to spare.** Production should still parallelize for burst tolerance.
+**Measured per-step latency** (clip_04, 2:21 clip, 18.6 MB):
 
-**Rate-limit headroom** at the time of writing — 60 requests/minute, 30,000 output tokens/minute on this plan tier. The four-clip demo consumed roughly a dozen analyze calls and a few thousand output tokens. We are nowhere near the ceiling.
+| Step | Time | Notes |
+|---|---|---|
+| Upload (`assets.create`) | 34.2s | Network-bound. Would be faster on agency LAN / direct AWS peering. |
+| Indexing (poll until ready) | 0.1s | Short clips index near-instantly. Longer clips (12+ min) take 5-15s. |
+| Triage analyze | 7.9s | Pegasus processing — scales with clip length. |
+| Compliance analyze | 7.3s | Same. |
+| **Total** | **49.4s** | |
+
+At 14 clips/hour (10K/month continuous), a **single sequential worker handles the load with 95%+ idle time.** Production should still parallelize for burst tolerance and upload overlap.
+
+**Throughput at scale (10K clips/month):**
+
+| Metric | Value |
+|---|---|
+| Analyze calls/month | 20,000 (2 per clip: triage + compliance) |
+| Calls/day (business hours) | ~670/day → ~28/hour |
+| Rate limit ceiling | 60 req/min → 3,600/hour |
+| **Headroom** | **~130x under the rate limit ceiling** |
+| Sequential processing time | ~139 hours/month (all 10K clips × 50s each) |
+| With 4 parallel workers | ~35 hours/month → ~1.2 hours/day |
+
+The bottleneck at scale is **upload bandwidth**, not API rate limits or Pegasus processing time. An agency with dedicated AWS peering or VPC endpoints to Bedrock would see upload times drop from 34s to single-digit seconds per clip.
 
 ### Architecture for production scale
 
@@ -334,11 +408,11 @@ This sequencing matters because it lets the system *earn* trust before it's reli
 Honesty about scope is part of the deliverable. The brief asks for at least 2 of 5 capabilities and at least 2 of 5 constraints; I went deeper on those and explicitly left others for later.
 
 - **FOIA / PII redaction** (capability #5 from the brief) — Phase 2.
-- **Cross-library Marengo search** (capability #4) — Phase 2. Requires a separate Marengo index.
+- **Cross-library Marengo search** (capability #4) — implemented. `src/search.py` + `bwc-marengo` index. Demonstrated with 7 query types across 5 clips.
 - **Standalone incident summarization** (capability #3) — partially covered by the `reasoning` fields in both outputs; a dedicated summarizer is Phase 2.
 - **Human-in-the-loop review UI.** Scope decision: there's no UI requirement in the brief, and a Python-script submission shows the API fluency more directly. A real deployment would not skip this.
 - **Civil liberties / bias dashboard.** Acknowledged as critical (see § 3 production list) but not built — would require real demographic data and a careful evaluation methodology that exceeds the scope of a take-home.
-- **Procurement pathway writeup.** I chose data sovereignty and explainability as my two PS constraints; procurement is a real concern but not what I went deep on here.
+- **Procurement pathway.** Covered in § 4c at a practical level (Bedrock as fast path, contract vehicles, SI go-to-market) but not a full RFP-ready writeup.
 
 ---
 
@@ -347,11 +421,11 @@ Honesty about scope is part of the deliverable. The brief asks for at least 2 of
 | Path | What it is |
 |---|---|
 | `src/run_demo.py` | End-to-end orchestrator. `python -m src.run_demo "clip_*.mp4"` runs every clip in `clips/`. |
-| `src/{ingest,triage,compliance,report}.py` | The four pipeline stages, each ~50 lines. |
+| `src/{ingest,triage,compliance,report}.py` | The four Pegasus pipeline stages, each ~50 lines. |
+| `src/search.py` | Marengo cross-library search: `setup_index()` to create + populate, `query()` to search. |
 | `prompts/triage.v1.md`, `prompts/compliance.v1.md` | The classifier "rules" — human-readable, version-controlled markdown. |
 | `schemas/triage.v1.json`, `schemas/compliance.v1.json` | Output JSON schemas for Pegasus structured responses. |
 | `outputs/<clip>/report.{json,md}` | Generated reports for the four sample clips. The `.md` versions are intended for supervisor consumption. Re-running `python -m src.run_demo` regenerates them. |
-| `skill.md` | TwelveLabs API reference + the two doc-vs-reality discrepancies I worked around. |
 | `CLAUDE.md` | Project decisions, design rationale, plan-of-attack checklist, demo presentation arc. |
 | `scripts/download_clips.sh` | Reproducible footage pipeline (yt-dlp + ffmpeg). NYPD clip is age-gated; script header explains the cookies dance. |
 

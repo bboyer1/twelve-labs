@@ -1,6 +1,6 @@
 """Upload BWC clips to TwelveLabs and wait until they're ready for analysis.
 
-Pattern from skill.md §4. Direct-upload path only — sufficient for the demo
+Direct-upload path only — sufficient for the demo
 since all sample clips are well under the 200 MB direct-upload limit. The
 production path for full-shift BWC recordings (> 200 MB) would use the
 multipart upload API; noted in docs/architecture.md.

@@ -1,26 +1,24 @@
 # BWC Report — clip_03_kalamazoo_dps_traffic_stop.mp4
 
-- **Generated:** 2026-04-11T05:12:18.580467+00:00
-- **Asset ID:** `69d9d820363123ca6d0292b8`
+- **Generated:** 2026-04-13T02:42:14.398062+00:00
+- **Asset ID:** `69dc57f695fdab3eada453d9`
 - **Model:** `pegasus1.2`
 - **SHA-256:** `a6c042f31c94e165bd29cfd348c0af4b9ae0797c0d0c9429e89472b03a66a9c4`
 
 ## Triage
 - **Priority:** **Standard**
-- **Reasoning:** The clip captures a standard traffic stop where the officer issues a citation for a non-working taillight and a front-tinted window, with the driver complying initially. A verbal altercation emerges around 01:32 when the driver questions the officer's reason for the stop, leading to a heated exchange about the chief's policy on tinted windows. The driver becomes defiant around 02:08, denying the presence of marijuana, which the officer claims to see. Although the interaction escalates in tone, there is no use of force, weapon draw, or physical restraint. The officer does not conduct a search, and the driver remains in control of the situation. Given the absence of physical escalation or safety threats, the event is classified as 'Standard' priority.
+- **Reasoning:** The clip captures a routine traffic stop that escalates into an arrest without use of force. The officer approaches the vehicle, interacts with the driver, and issues citations for a non-working brake light, front tint, and driving without a license. The driver complies with instructions, including signing a court appearance notice. Although there is verbal tension, including aggressive language and accusations of searching the car, no physical confrontation, weapon display, or escalation to force occurs. The situation remains within standard police procedure, warranting a Standard priority classification.
 - **Prompt / schema version:** `v1` / `v1`
 
 ### Events
 - `00:00:00` — **traffic_stop** (confidence 0.90)
-- `00:00:20` — **citation_issued** (confidence 0.80)
-- `00:00:50` — **subject_compliance** (confidence 0.90)
-- `00:01:32` — **verbal_altercation** (confidence 0.70)
-- `00:01:53` — **search_request** (confidence 0.80)
-- `00:02:08` — **subject_defiance** (confidence 0.80)
+- `00:00:15` — **officer_interaction** (confidence 0.80)
+- `00:00:30` — **subject_compliance** (confidence 0.90)
+- `00:00:45` — **arrest** (confidence 0.90)
 
 ## Policy Compliance
 - **Prompt / schema version:** `v1` / `v1`
-- **Reasoning:** The officer approached the subject in a controlled manner, using clear verbal commands and a calm tone to manage the interaction. At 00:29:00, the officer instructed the subject to exit the vehicle, which was a direct and observable command. At 01:29:00, the officer reiterated a clear command to step back, reinforcing distance management. At 01:40:00, the officer acknowledged the subject's emotional state, demonstrating active listening. No physical force, verbal escalation beyond standard commands, or weapon display was observed. Officer positioning remained consistent with de-escalation principles throughout the encounter, with no indication of aggressive posturing or close proximity that could escalate tension.
+- **Reasoning:** The officer engaged with a driver in a parking lot, initiating a traffic stop. At 00:29, the officer used a calm tone to request the subject remain composed. At 01:00, a clear command was issued for the subject to exit the vehicle. At 01:30, the officer acknowledged the subject's frustration, demonstrating active listening. No force was used during the interaction, and the officer maintained a non-threatening posture with consistent distance. The positioning and verbal techniques observed support de-escalation efforts throughout the encounter.
 
 ### Raw finding
 ```json
@@ -35,20 +33,20 @@
     {
       "timestamp": "00:29:00",
       "technique": "calm_tone",
-      "quote": "I need you to step out of the car.",
-      "confidence": 1
+      "quote": "I need you to stay calm and listen to me.",
+      "confidence": 0.9
     },
     {
-      "timestamp": "01:29:00",
+      "timestamp": "01:00:00",
       "technique": "clear_command",
-      "quote": "Please step back from the car.",
-      "confidence": 1
+      "quote": "Please step out of the vehicle.",
+      "confidence": 0.8
     },
     {
-      "timestamp": "01:40:00",
+      "timestamp": "01:30:00",
       "technique": "active_listening",
       "quote": "I understand you're upset, but we need to resolve this.",
-      "confidence": 1
+      "confidence": 0.7
     }
   ],
   "use_of_force": {
@@ -58,9 +56,9 @@
     "confidence": 1
   },
   "positioning": {
-    "assessment": "The officer maintained a safe distance from the subject and did not corner-pinn or display weapons without clear threat.",
+    "assessment": "The officer maintained a safe distance from the subject and did not corner-pinning or display weapons without clear threat.",
     "confidence": 1
   },
-  "reasoning": "The officer approached the subject in a controlled manner, using clear verbal commands and a calm tone to manage the interaction. At 00:29:00, the officer instructed the subject to exit the vehicle, which was a direct and observable command. At 01:29:00, the officer reiterated a clear command to step back, reinforcing distance management. At 01:40:00, the officer acknowledged the subject's emotional state, demonstrating active listening. No physical force, verbal escalation beyond standard commands, or weapon display was observed. Officer positioning remained consistent with de-escalation principles throughout the encounter, with no indication of aggressive posturing or close proximity that could escalate tension."
+  "reasoning": "The officer engaged with a driver in a parking lot, initiating a traffic stop. At 00:29, the officer used a calm tone to request the subject remain composed. At 01:00, a clear command was issued for the subject to exit the vehicle. At 01:30, the officer acknowledged the subject's frustration, demonstrating active listening. No force was used during the interaction, and the officer maintained a non-threatening posture with consistent distance. The positioning and verbal techniques observed support de-escalation efforts throughout the encounter."
 }
 ```

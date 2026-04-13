@@ -33,6 +33,7 @@ COMPLIANCE_VERSION = "v1"
 # The analyze endpoint is backed by Pegasus; recorded in every report for
 # audit trail. (The SDK doesn't require us to pass this — it's metadata.)
 PEGASUS_MODEL = "pegasus1.2"
+MARENGO_MODEL = "marengo3.0"
 
 # --- Client -----------------------------------------------------------------
 

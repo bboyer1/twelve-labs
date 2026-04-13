@@ -14,7 +14,7 @@ Every output is chain-of-custody-ready: each report embeds the source file's SHA
 - **Pegasus 1.2** via `client.analyze()` with `response_format=ResponseFormat(type="json_schema", ...)` — the entire demo rides on this one primitive.
 - No Marengo / indexes / search. Analyze runs directly off asset IDs without an index, which keeps the architecture simple and lets us reason about one model's behavior at a time.
 
-See [`skill.md`](./skill.md) for the full API reference and [`docs/architecture.md`](./docs/architecture.md) for how this would scale to 10K+ videos/month in a government environment.
+See [`docs/architecture.md`](./docs/architecture.md) for how this would scale to 10K+ videos/month in a government environment.
 
 ## Quickstart
 
@@ -41,7 +41,6 @@ Outputs land in `outputs/<clip_stem>/` as `report.json` and `report.md`.
 ```
 .
 ├── CLAUDE.md               # project init — design rationale, decisions, plan
-├── skill.md                # TwelveLabs v1.3 API reference
 ├── README.md               # this file
 ├── requirements.txt
 ├── .env.example
@@ -51,7 +50,8 @@ Outputs land in `outputs/<clip_stem>/` as `report.json` and `report.md`.
 │   ├── ingest.py           # direct-upload + status polling
 │   ├── triage.py           # Pegasus structured analyze for triage
 │   ├── compliance.py       # Pegasus structured analyze for policy audit
-│   ├── report.py           # merge + chain-of-custody record + markdown render
+│   ├── search.py           # Marengo cross-library natural-language search
+│   ├── report.py           # merge + chain-of-custody record + markdown/HTML render
 │   └── run_demo.py         # end-to-end orchestrator (entry point)
 ├── prompts/                # versioned prompt templates (explainability)
 │   ├── triage.v1.md
@@ -71,4 +71,4 @@ Outputs land in `outputs/<clip_stem>/` as `report.json` and `report.md`.
 - **Prompts and schemas live as versioned files on disk**, never inline Python constants. This is the entire explainability story in one design choice: every field in every report cites `_prompt_version` and `_schema_version`, so an IA investigator or defense attorney can re-run the exact call that produced the evidence.
 - **Direct-upload only.** Sample clips are all under 200 MB. The production path for full-shift BWC (> 200 MB) would use multipart uploads — noted in `docs/architecture.md`.
 - **No index creation.** Analyze works off raw `asset_id`. If we add cross-library search, that would be a separate Marengo index — two indexes can't coexist.
-- **JSON-schema workarounds.** The v1.3 analyze endpoint doesn't support `enum`, `minLength`, or `maxLength`. Enum-like fields use `pattern: "^(A|B|C)$"` instead. See `skill.md` §6.
+- **JSON-schema workarounds.** The v1.3 analyze endpoint doesn't support `enum`, `minLength`, or `maxLength`. Enum-like fields use `pattern: "^(A|B|C)$"` instead. See `docs/architecture.md` § 1 for details.

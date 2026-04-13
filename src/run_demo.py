@@ -66,9 +66,7 @@ def process_clip(clip_path: Path, console=None) -> dict:
     with _step("Uploading + indexing", console) as elapsed:
         asset_id = ingest(clip_path)
     if v:
-        console.print(
-            f"  [green]✓[/] Ready — asset_id=[dim]{asset_id[:12]}...[/] [dim]({elapsed():.1f}s)[/]"
-        )
+        console.print(f"  [green]✓[/] Ready — asset_id=[dim]{asset_id[:12]}...[/] [dim]({elapsed():.1f}s)[/]")
     else:
         print(f"        asset_id = {asset_id}")
 
@@ -84,10 +82,7 @@ def process_clip(clip_path: Path, console=None) -> dict:
         )
         top = sorted(events, key=lambda e: e.get("confidence", 0), reverse=True)[:3]
         if top:
-            parts = [
-                f"[bold]{e.get('type', '?')}[/] @ {e.get('timestamp', '?')}"
-                for e in top
-            ]
+            parts = [f"[bold]{e.get('type', '?')}[/] @ {e.get('timestamp', '?')}" for e in top]
             console.print(f"    └─ {' · '.join(parts)}")
     else:
         print(f"        priority = {priority}")
@@ -97,16 +92,13 @@ def process_clip(clip_path: Path, console=None) -> dict:
         compliance_result = compliance(asset_id)
     uof = compliance_result.get("use_of_force", {})
     uof_type = uof.get("type", "?")
+
     if v:
         miranda = compliance_result.get("miranda", {})
         deesc = compliance_result.get("deescalation", [])
         reasoning = compliance_result.get("reasoning", "")
         console.print(f"  [green]✓[/] Compliance complete [dim]({elapsed():.1f}s)[/]")
-        m = (
-            "[green]delivered[/]"
-            if miranda.get("delivered")
-            else "[dim]not delivered[/]"
-        )
+        m = "[green]delivered[/]" if miranda.get("delivered") else "[dim]not delivered[/]"
         console.print(f"    ├─ Miranda: {m}")
         console.print(f"    ├─ De-escalation: {len(deesc)} instance(s)")
         u_style = _U_STYLE.get(uof_type, "white")
@@ -130,9 +122,7 @@ def process_clip(clip_path: Path, console=None) -> dict:
     out_dir = save_report(report, OUTPUTS_DIR)
     total = time.time() - t_start
     if v:
-        console.print(
-            f"  [green]✓[/] Report → {out_dir.name}/ [dim]({total:.1f}s total)[/]"
-        )
+        console.print(f"  [green]✓[/] Report → {out_dir.name}/ [dim]({total:.1f}s total)[/]")
     else:
         print(f"        saved → {out_dir}")
 
@@ -172,9 +162,7 @@ def _print_summary(results: list[dict], console) -> None:
 
     console.print()
     console.print(table)
-    console.print(
-        f"\n  [bold]{len(results)}[/] clip(s) in [bold]{total_time:.1f}s[/] total\n"
-    )
+    console.print(f"\n  [bold]{len(results)}[/] clip(s) in [bold]{total_time:.1f}s[/] total\n")
 
 
 def main(argv: list[str]) -> int:
@@ -190,6 +178,17 @@ def main(argv: list[str]) -> int:
         "--verbose",
         action="store_true",
         help="rich output with spinners, colors, and summary table",
+    )
+    parser.add_argument(
+        "-s",
+        "--search",
+        nargs="+",
+        metavar="QUERY",
+        help='run Marengo cross-library search after processing (e.g. -s "officer drew a firearm")',
+    )
+    parser.add_argument(
+        "--index-id",
+        help="Marengo index ID for search (reads from outputs/indexes.json if omitted)",
     )
     args = parser.parse_args(argv)
 
@@ -207,10 +206,7 @@ def main(argv: list[str]) -> int:
 
     clips = discover_clips(CLIPS_DIR, pattern=args.pattern)
     if not clips:
-        msg = (
-            f"No clips matching '{args.pattern}' found under {CLIPS_DIR}.\n"
-            f"Run ./scripts/download_clips.sh first."
-        )
+        msg = f"No clips matching '{args.pattern}' found under {CLIPS_DIR}.\nRun ./scripts/download_clips.sh first."
         print(msg, file=sys.stderr) if not console else console.print(f"[red]{msg}[/]")
         return 1
 
@@ -233,15 +229,68 @@ def main(argv: list[str]) -> int:
             results.append(process_clip(clip, console=console))
         except Exception as e:  # noqa: BLE001
             err = f"FAILED: {e}"
-            print(f"  !! {err}", file=sys.stderr) if not console else console.print(
-                f"  [red bold]✗ {err}[/]"
-            )
+            print(f"  !! {err}", file=sys.stderr) if not console else console.print(f"  [red bold]✗ {err}[/]")
             results.append({"name": clip.stem, "error": str(e)})
 
     if console:
         _print_summary(results, console)
 
+    # Cross-library search (Marengo)
+    if args.search:
+        _run_search(args.search, args.index_id, console)
+
     return 0
+
+
+def _run_search(queries: list[str], index_id: str | None, console) -> None:
+    """Run Marengo natural-language search queries."""
+    import json as _json
+    from pathlib import Path as _Path
+
+    from .search import query as search_query
+
+    # Resolve index_id
+    if not index_id:
+        idx_file = OUTPUTS_DIR / "indexes.json"
+        if idx_file.exists():
+            index_id = _json.loads(idx_file.read_text()).get("marengo_index_id")
+    if not index_id:
+        msg = "No Marengo index_id. Pass --index-id or run index setup first."
+        print(msg, file=sys.stderr) if not console else console.print(f"[red]{msg}[/]")
+        return
+
+    v = console is not None
+    if v:
+        console.print()
+        console.rule("[bold]Marengo Cross-Library Search[/]")
+
+    for q in queries:
+        if v:
+            console.print(f'\n  [cyan]"{q}"[/]')
+            with console.status("[bold blue]  Searching...[/]", spinner="dots"):
+                hits = search_query(index_id, q, max_results=5)
+        else:
+            print(f'\nSearch: "{q}"')
+            hits = search_query(index_id, q, max_results=5)
+
+        if not hits:
+            msg = "  No results."
+            print(msg) if not v else console.print(f"  [dim]{msg}[/]")
+            continue
+
+        for hit in hits:
+            rank_marker = "[bold green]★[/]" if hit.rank == 1 and v else ("★" if hit.rank == 1 else " ")
+            ts = hit.timestamp
+            name = hit.clip_name
+            if v:
+                console.print(f"  {rank_marker} [bold][{ts}][/] {name}")
+                if hit.transcript:
+                    console.print(f'           [dim]"{hit.transcript[:80]}"[/]')
+            else:
+                mark = "★" if hit.rank == 1 else " "
+                print(f"  {mark} [{ts}] {name}")
+                if hit.transcript:
+                    print(f'           "{hit.transcript[:80]}"')
 
 
 if __name__ == "__main__":

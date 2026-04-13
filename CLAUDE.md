@@ -2,7 +2,7 @@
 
 This directory holds Bret's submission for the **TwelveLabs Solutions Engineering take-home exercise** (Public Sector: Government Video Intelligence). This file is the project's north star — read it first on every session.
 
-The full brief is at `SE-Technical Exercise- 2026.pdf`. The TwelveLabs API reference for this repo is at `skill.md` — always consult it before writing API code.
+The full brief is at `SE-Technical Exercise- 2026.pdf`. The TwelveLabs API reference for this repo is at `.claude/twelvelabs-api-reference.md` — always consult it before writing API code.
 
 ## The exercise in one paragraph
 
@@ -48,7 +48,7 @@ asset_id
 outputs/<asset_id>.json  +  outputs/<asset_id>.md
 ```
 
-Both `triage.py` and `compliance.py` use `client.analyze()` with `response_format=ResponseFormat(type="json_schema", ...)` — this is the single most important TwelveLabs primitive for this submission. See `skill.md` § "Structured JSON analysis" for the exact pattern and the schema keyword limitations (no `enum`, no `minLength` — we work around both).
+Both `triage.py` and `compliance.py` use `client.analyze()` with `response_format=ResponseFormat(type="json_schema", ...)` — this is the single most important TwelveLabs primitive for this submission. See `.claude/twelvelabs-api-reference.md` § "Structured JSON analysis" for the exact pattern and the schema keyword limitations (no `enum`, no `minLength` — we work around both).
 
 ## Key architectural constraints to remember
 
@@ -63,7 +63,7 @@ Both `triage.py` and `compliance.py` use `client.analyze()` with `response_forma
 ```
 twelve-labs/
 ├── CLAUDE.md                       # this file
-├── skill.md                        # TwelveLabs API reference
+├── .claude/twelvelabs-api-reference.md  # TwelveLabs API reference (local, not committed)
 ├── README.md                       # what this is + how to run
 ├── SE-Technical Exercise- 2026.pdf # the brief
 ├── requirements.txt                # twelvelabs, python-dotenv
@@ -99,7 +99,7 @@ For a ~14-minute live demo (they'll likely cap at 30, plenty of headroom):
 3. **Architectural choices (3 min).** Versioned prompts on disk → explainability. SHA-256 of source file → chain of custody. Pegasus only, no Marengo → focused scope. Each one is a deliberate trade-off that maps to a customer requirement.
 4. **Public sector constraints (3 min).** **Sovereignty:** TwelveLabs runs on Amazon Bedrock; footage stays in the agency tenant; that's the answer to the first question every government CIO asks. **Explainability:** every flag has a timestamp + a quoted source + a versioned prompt that produced it; an IA investigator or defense attorney can reproduce any finding.
 5. **What's missing on purpose (1 min).** No UI, no Marengo search, no PII redaction, only 2 of 5 capabilities. Each is a scope decision. Here's what week 2 looks like.
-6. **Gotchas (1 min).** Two of the v1.3 doc claims were wrong — `minimum`/`maximum` numeric constraints aren't actually supported, and the SDK constructor doesn't actually auto-read the env var. Both diagnosed, both worked around, both written up in `skill.md` § 6 so the next engineer doesn't lose an hour. *This is the rarest signal you'll send: that you noticed, fixed, and documented the rough edges.*
+6. **Gotchas (1 min).** Two of the v1.3 doc claims were wrong — `minimum`/`maximum` numeric constraints aren't actually supported, and the SDK constructor doesn't actually auto-read the env var. Both diagnosed, both worked around, both written up in `.claude/twelvelabs-api-reference.md` § 6 so the next engineer doesn't lose an hour. *This is the rarest signal you'll send: that you noticed, fixed, and documented the rough edges.*
 
 ## Demo talking points (for the recording)
 
@@ -133,4 +133,4 @@ For a ~14-minute live demo (they'll likely cap at 30, plenty of headroom):
 - **Don't implement more than 2 capabilities** unless Bret explicitly asks. The brief says "at least 2" — doing 2 well beats doing 4 badly.
 - **Don't build a UI.** Decision was made to go Python-script-only.
 - **Don't inline prompts or schemas into `.py` files.** They live in `prompts/` and `schemas/` — that's the explainability story.
-- **Always check `skill.md` before writing API calls.** v1.3 has specific quirks (no enum in schemas, separate Marengo/Pegasus indexes, `asset.status` polling).
+- **Always check `.claude/twelvelabs-api-reference.md` before writing API calls.** v1.3 has specific quirks (no enum in schemas, separate Marengo/Pegasus indexes, `asset.status` polling).

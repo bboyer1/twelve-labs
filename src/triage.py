@@ -4,7 +4,7 @@ Calls Pegasus via client.analyze() with a JSON-schema response format.
 The prompt and schema are loaded from versioned files on disk so every
 report can cite the exact prompt + schema used to produce it.
 
-See skill.md §5b for the underlying TwelveLabs pattern.
+See https://docs.twelvelabs.io/v1.3/docs/guides/analyze-videos/structured-responses
 """
 
 from __future__ import annotations
