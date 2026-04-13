@@ -22,7 +22,7 @@ Verified end-to-end on **four real clips** spanning the priority spectrum:
 | `clip_03` Kalamazoo DPS traffic stop | Kalamazoo DPS via MLive | **Standard** | `none` |
 | `clip_04` NM State Police DWI stop | NMSP via KRQE | **Standard** | `none` |
 
-All four full reports are committed under `samples/<clip>/report.{json,md}` for evaluator inspection without re-running the pipeline. (Runtime reports from `python -m src.run_demo` land in `outputs/<clip>/`, which is gitignored.) The most striking passages are quoted inline below.
+All four full reports are in `outputs/<clip>/report.{json,md}`. The most striking passages are quoted inline below.
 
 ---
 
@@ -350,7 +350,7 @@ Honesty about scope is part of the deliverable. The brief asks for at least 2 of
 | `src/{ingest,triage,compliance,report}.py` | The four pipeline stages, each ~50 lines. |
 | `prompts/triage.v1.md`, `prompts/compliance.v1.md` | The classifier "rules" — human-readable, version-controlled markdown. |
 | `schemas/triage.v1.json`, `schemas/compliance.v1.json` | Output JSON schemas for Pegasus structured responses. |
-| `samples/<clip>/report.{json,md}` | Committed example reports for the four sample clips. The `.md` versions are intended for supervisor consumption. Runtime reports from `python -m src.run_demo` land in `outputs/<clip>/` (gitignored). |
+| `outputs/<clip>/report.{json,md}` | Generated reports for the four sample clips. The `.md` versions are intended for supervisor consumption. Re-running `python -m src.run_demo` regenerates them. |
 | `skill.md` | TwelveLabs API reference + the two doc-vs-reality discrepancies I worked around. |
 | `CLAUDE.md` | Project decisions, design rationale, plan-of-attack checklist, demo presentation arc. |
 | `scripts/download_clips.sh` | Reproducible footage pipeline (yt-dlp + ffmpeg). NYPD clip is age-gated; script header explains the cookies dance. |

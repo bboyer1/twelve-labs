@@ -22,7 +22,6 @@ CLIPS_DIR = REPO_ROOT / "clips"
 PROMPTS_DIR = REPO_ROOT / "prompts"
 SCHEMAS_DIR = REPO_ROOT / "schemas"
 OUTPUTS_DIR = REPO_ROOT / "outputs"
-SAMPLES_DIR = REPO_ROOT / "samples"
 
 # --- Versions ---------------------------------------------------------------
 

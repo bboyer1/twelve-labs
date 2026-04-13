@@ -81,7 +81,7 @@ twelve-labs/
 ├── schemas/                        # versioned JSON schemas
 │   ├── triage.v1.json
 │   └── compliance.v1.json
-├── samples/                        # sample outputs to ship with submission
+├── outputs/                        # generated reports (committed)
 │   └── <asset_id>.{json,md}
 └── docs/
     ├── architecture.md             # REQUIRED deliverable — addresses both PS constraints

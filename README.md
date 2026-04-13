@@ -63,8 +63,7 @@ Outputs land in `outputs/<clip_stem>/` as `report.json` and `report.md`.
 │   └── download_clips.sh   # reproducible footage pipeline (yt-dlp + ffmpeg)
 ├── docs/
 │   └── architecture.md     # addresses the 4 submission questions + 2 PS constraints
-├── samples/                # committed example outputs (populate after first run)
-└── outputs/                # runtime reports (gitignored)
+└── outputs/                # generated reports (committed)
 ```
 
 ## Design notes
