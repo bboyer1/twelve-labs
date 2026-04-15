@@ -10,6 +10,10 @@ A TwelveLabs-powered pipeline for a metropolitan police department that ingests 
 
 Every output is chain-of-custody-ready: each report embeds the source file's SHA-256, the TwelveLabs asset ID, the exact prompt and schema versions used, and a UTC generation timestamp.
 
+## Architecture
+
+![BWC-IQ Architecture](docs/architecture.png)
+
 ## What's used from TwelveLabs
 
 | Model | Purpose | API |

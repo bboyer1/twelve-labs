@@ -127,7 +127,7 @@ st.sidebar.caption("Body-Worn Camera Intelligence")
 
 page = st.sidebar.radio(
     "Navigate",
-    ["Dashboard", "Clip Detail", "Cross-Library Search", "About"],
+    ["About", "Dashboard", "Clip Detail", "Cross-Library Search"],
     label_visibility="collapsed",
 )
 
@@ -664,12 +664,22 @@ elif page == "About":
     st.markdown("# About BWC-IQ")
 
     st.markdown(
-        """
-BWC-IQ is a TwelveLabs-powered pipeline for automated body-worn camera
-footage triage and policy compliance auditing, built for the
-**TwelveLabs Solutions Engineering Take-Home Exercise** (Public Sector:
-Government Video Intelligence).
+        "BWC-IQ is a TwelveLabs-powered pipeline for automated body-worn camera "
+        "footage triage and policy compliance auditing, built for the "
+        "**TwelveLabs Solutions Engineering Take-Home Exercise** (Public Sector: "
+        "Government Video Intelligence)."
+    )
 
+    # Architecture diagram
+    st.markdown("### Architecture")
+    arch_img = REPO_ROOT / "docs" / "architecture.png"
+    if arch_img.exists():
+        st.image(str(arch_img), use_container_width=True)
+    else:
+        st.caption("Architecture diagram not found at docs/architecture.png.")
+
+    st.markdown(
+        """
 ### Capabilities
 
 1. **Triage Classification** (Pegasus 1.2) -- Urgent / Standard / Archive,
@@ -685,25 +695,6 @@ Government Video Intelligence).
   SHA-256 hashes, asset IDs, and versioned prompts in every report.
 - **Explainability** -- Every flag anchored to a timestamp, every call cites
   a versioned prompt, every report includes a reasoning narrative.
-
-### Architecture
-
-```
-BWC clip --> ingest.py --> asset_id
-                              |
-                    +---------+---------+
-                    |                   |
-              triage.py          compliance.py
-              (Pegasus)           (Pegasus)
-                    |                   |
-                    +---------+---------+
-                              |
-                         report.py
-                    (chain of custody)
-                              |
-                     outputs/<clip>/
-                   report.{json,md,html}
-```
 """
     )
 
