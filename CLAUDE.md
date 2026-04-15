@@ -26,11 +26,11 @@ All four clips transcoded to H.264/AAC 720p for TwelveLabs compatibility. All un
 | File | Source | Duration | Pegasus triage | UoF | Notes |
 |---|---|---|---|---|---|
 | `clips/clip_01_nypd_107pct_ois_20260126.mp4` | NYPD 107th Precinct Officer-Involved Shooting, 2026-01-26 (incl. 911 call) | 12:48 | **Urgent** | `lethal_force` (4 rounds discharged) | Age-restricted on YT — required Chrome cookies. Pegasus correctly identified the de-escalation chain *preceding* the shot. |
-| `clips/clip_02_lapd_armed_suspect_restraining_order.mp4` | LAPD Armed Suspect, Restraining Order Violation | 7:23 | **Urgent** | `physical_restraint` | Title implies a shooting; Pegasus did NOT classify lethal_force, which is **the correct call** — the actual shooting happens after the released clip ends. |
+| `clips/clip_02_lapd_armed_suspect_restraining_order.mp4` | LAPD Armed Suspect, Restraining Order Violation | 7:23 | **Urgent** | `none` (compliance) / `physical_restraint` (triage) | Shooting happens after the released clip ends. Triage correctly flags physical_restraint at 06:57 from the takedown; compliance consistently classifies UoF as `none` (Pegasus limitation — see re-analyze comparison in Streamlit). |
 | `clips/clip_03_kalamazoo_dps_traffic_stop.mp4` | Kalamazoo DPS body cam (via MLive), traffic stop later disputed as racial profiling and debunked | 2:39 | **Standard** | `none` | Verbal disagreement about taillight + tint citation; Pegasus correctly held it at Standard despite the verbal escalation because no physical force occurred. |
 | `clips/clip_04_nmsp_dwi_stop.mp4` | KRQE-released NM State Police DWI stop ("officer moved to tears") | 2:21 | **Standard** | `none` | DWI arrest without force; Pegasus identified the field sobriety test commands AND the discovery of a child in the trunk. |
 
-**Coverage achieved:** 2 Urgent (with different UoF types: lethal vs physical_restraint), 2 Standard (with different contexts: traffic-stop disagreement vs DWI arrest with welfare incident). The demo can now show real discriminative classification across the priority spectrum.
+**Coverage achieved:** 2 Urgent, 2 Standard, 1 Archive (control clip). The demo shows real discriminative classification across the full priority spectrum.
 
 ## The shape of the solution
 

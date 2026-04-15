@@ -1,3 +1,4 @@
 twelvelabs
 python-dotenv
 rich          # optional — only used by `python -m src.run_demo -v`
+streamlit     # dashboard UI — `streamlit run app.py`

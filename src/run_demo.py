@@ -11,6 +11,7 @@ Verbose mode requires: pip install rich  (included in requirements.txt)
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 import time
 from contextlib import contextmanager
@@ -21,6 +22,14 @@ from .config import CLIPS_DIR, COMPLIANCE_VERSION, OUTPUTS_DIR, TRIAGE_VERSION
 from .ingest import ingest
 from .report import build_report, save_report
 from .triage import triage
+
+
+def _load_asset_index() -> dict[str, str]:
+    """Load clip_stem -> asset_id mapping from outputs/indexes.json."""
+    idx_file = OUTPUTS_DIR / "indexes.json"
+    if idx_file.exists():
+        return json.loads(idx_file.read_text()).get("assets", {})
+    return {}
 
 # Style maps — only consumed by verbose path, but defined once.
 _P_STYLE = {"Urgent": "red bold", "Standard": "yellow", "Archive": "dim"}
@@ -49,9 +58,10 @@ def _step(label: str, console):
         yield lambda: time.time() - t0
 
 
-def process_clip(clip_path: Path, console=None) -> dict:
+def process_clip(clip_path: Path, asset_index: dict[str, str] | None = None, console=None) -> dict:
     """Run the full pipeline on one clip. Returns a result dict."""
     name = clip_path.name
+    stem = clip_path.stem
     v = console is not None  # verbose?
     t_start = time.time()
 
@@ -62,13 +72,21 @@ def process_clip(clip_path: Path, console=None) -> dict:
     else:
         print(f"\n=== {name} ===")
 
-    # 1. Upload + index
-    with _step("Uploading + indexing", console) as elapsed:
-        asset_id = ingest(clip_path)
-    if v:
-        console.print(f"  [green]✓[/] Ready — asset_id=[dim]{asset_id[:12]}...[/] [dim]({elapsed():.1f}s)[/]")
+    # 1. Look up existing asset_id or upload
+    existing_id = (asset_index or {}).get(stem)
+    if existing_id:
+        asset_id = existing_id
+        if v:
+            console.print(f"  [green]✓[/] Using indexed asset — [dim]{asset_id[:12]}...[/]")
+        else:
+            print(f"        asset_id = {asset_id} (indexed)")
     else:
-        print(f"        asset_id = {asset_id}")
+        with _step("Uploading + indexing", console) as elapsed:
+            asset_id = ingest(clip_path)
+        if v:
+            console.print(f"  [green]✓[/] Ready — asset_id=[dim]{asset_id[:12]}...[/] [dim]({elapsed():.1f}s)[/]")
+        else:
+            print(f"        asset_id = {asset_id}")
 
     # 2. Triage
     with _step(f"Triage (triage.{TRIAGE_VERSION})", console) as elapsed:
@@ -223,10 +241,19 @@ def main(argv: list[str]) -> int:
     else:
         print(f"Processing {len(clips)} clip(s) sequentially.")
 
+    asset_index = _load_asset_index()
+    indexed_count = sum(1 for c in clips if c.stem in asset_index)
+    if indexed_count:
+        msg = f"Found {indexed_count}/{len(clips)} clip(s) already indexed — skipping upload."
+        if console:
+            console.print(f"  [dim]{msg}[/]")
+        else:
+            print(f"  {msg}")
+
     results: list[dict] = []
     for clip in clips:
         try:
-            results.append(process_clip(clip, console=console))
+            results.append(process_clip(clip, asset_index=asset_index, console=console))
         except Exception as e:  # noqa: BLE001
             err = f"FAILED: {e}"
             print(f"  !! {err}", file=sys.stderr) if not console else console.print(f"  [red bold]✗ {err}[/]")
@@ -244,16 +271,13 @@ def main(argv: list[str]) -> int:
 
 def _run_search(queries: list[str], index_id: str | None, console) -> None:
     """Run Marengo natural-language search queries."""
-    import json as _json
-    from pathlib import Path as _Path
-
     from .search import query as search_query
 
     # Resolve index_id
     if not index_id:
         idx_file = OUTPUTS_DIR / "indexes.json"
         if idx_file.exists():
-            index_id = _json.loads(idx_file.read_text()).get("marengo_index_id")
+            index_id = json.loads(idx_file.read_text()).get("marengo_index_id")
     if not index_id:
         msg = "No Marengo index_id. Pass --index-id or run index setup first."
         print(msg, file=sys.stderr) if not console else console.print(f"[red]{msg}[/]")

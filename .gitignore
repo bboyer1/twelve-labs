@@ -11,9 +11,11 @@ env/
 .env
 .env.local
 
-# IDE / OS
+# IDE / OS / tooling
 .vscode/
 .idea/
+.claude/
+.ruff_cache/
 *.swp
 .DS_Store
 
