@@ -19,6 +19,9 @@ env/
 *.swp
 .DS_Store
 
+# Demo recordings (too large for GitHub — share via Google Drive)
+demo/
+
 # Downloaded media — reproducible via scripts/download_clips.sh
 clips/*.mp4
 clips/*.mov
