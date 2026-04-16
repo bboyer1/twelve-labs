@@ -118,18 +118,37 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# Hide Streamlit chrome for a cleaner demo
+st.markdown(
+    """<style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    </style>""",
+    unsafe_allow_html=True,
+)
+
 # ---------------------------------------------------------------------------
 # Sidebar
 # ---------------------------------------------------------------------------
 
-st.sidebar.markdown("## BWC-IQ")
-st.sidebar.caption("Body-Worn Camera Intelligence")
+st.sidebar.markdown(
+    '<h1 style="margin-bottom:0;">BWC-IQ</h1>'
+    '<p style="margin-top:0;color:#8899aa;font-size:0.85rem;">'
+    'Body-Worn Camera Intelligence<br>'
+    '<span style="font-size:0.75rem;">Powered by TwelveLabs Pegasus 1.2 &amp; Marengo 3.0</span>'
+    '</p>',
+    unsafe_allow_html=True,
+)
+st.sidebar.divider()
 
 page = st.sidebar.radio(
     "Navigate",
     ["About", "Dashboard", "Clip Detail", "Cross-Library Search"],
     label_visibility="collapsed",
 )
+st.sidebar.divider()
+st.sidebar.caption("Bret Boyer | TwelveLabs SE Exercise")
 
 reports = load_reports()
 indexes = load_indexes()
